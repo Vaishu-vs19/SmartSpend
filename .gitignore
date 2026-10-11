@@ -1,0 +1,53 @@
+# ===================================================================
+# SmartSpend — Git Ignore Rules
+# ===================================================================
+
+# Environment variables & secrets (Never commit secrets to GitHub)
+.env
+.env.*
+!.env.example
+*.local
+secrets/
+credentials.json
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# Editor & IDE directories
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+
+# Logs & Temporary files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+*.temp
+
+# Dependencies & Build artifacts (if tooling is added in the future)
+node_modules/
+dist/
+build/
+out/
+.cache/
+
+# Testing coverage & scratch outputs
+coverage/
+.nyc_output/
+scratch/

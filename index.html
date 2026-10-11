@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SmartSpend - A modern, responsive personal finance and expense tracker web application. Manage income, expenses, monthly budgets, and analytics.">
+  <title>SmartSpend — Modern Expense Tracker & Budget Manager</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div class="app-layout" id="appLayout">
+    
+    <!-- Mobile Header Bar -->
+    <header class="mobile-nav-header" id="mobileNavHeader">
+      <div class="brand-group">
+        <div class="brand-icon">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <span class="brand-name">SmartSpend</span>
+      </div>
+      <div class="mobile-header-actions">
+        <button type="button" class="btn btn-icon btn-ghost" id="mobileAddBtn" aria-label="Quick Add Transaction" title="Add Transaction">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <button type="button" class="btn btn-icon btn-ghost" id="mobileMenuToggle" aria-label="Open Navigation Menu" title="Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <div class="brand-group">
+          <div class="brand-icon">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <div>
+            <h1 class="brand-name">SmartSpend</h1>
+            <p class="brand-tagline">Fintech Manager</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-icon btn-ghost mobile-only" id="sidebarCloseBtn" aria-label="Close Navigation">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Quick Action: Add Transaction -->
+      <div class="sidebar-action">
+        <button type="button" class="btn btn-primary btn-block" id="sidebarAddBtn">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add Transaction</span>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <ul class="nav-list" role="menubar">
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link active" data-view="dashboard" role="menuitem" id="navDashboard">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>Dashboard</span>
+            </button>
+          </li>
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link" data-view="transactions" role="menuitem" id="navTransactions">
+              <i class="fa-solid fa-receipt"></i>
+              <span>Transactions</span>
+              <span class="nav-badge" id="sidebarTxCount">0</span>
+            </button>
+          </li>
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link" data-view="analytics" role="menuitem" id="navAnalytics">
+              <i class="fa-solid fa-chart-line"></i>
+              <span>Analytics</span>
+            </button>
+          </li>
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link" data-view="budget" role="menuitem" id="navBudget">
+              <i class="fa-solid fa-bullseye"></i>
+              <span>Budget & Goals</span>
+            </button>
+          </li>
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link" data-view="settings" role="menuitem" id="navSettings">
+              <i class="fa-solid fa-gear"></i>
+              <span>Settings</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Sidebar Mini Monthly Budget Widget -->
+      <div class="sidebar-widget">
+        <div class="widget-header">
+          <span class="widget-title">Monthly Health</span>
+          <span class="widget-badge" id="sidebarBudgetPct">0%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="sidebarProgressBar" style="width: 0%;"></div>
+        </div>
+        <p class="widget-subtext" id="sidebarBudgetRemaining">₹0 left to spend</p>
+      </div>
+
+      <!-- User Profile / Session Card -->
+      <div class="sidebar-footer">
+        <div class="user-profile-card">
+          <div class="avatar" id="sidebarUserAvatar">DS</div>
+          <div class="user-info">
+            <span class="user-name" id="sidebarUserName">Demo Student</span>
+            <span class="user-role" id="sidebarUserRole">Demo Account</span>
+          </div>
+          <button type="button" class="btn btn-icon btn-ghost" id="authBtn" title="Account & Session" aria-label="Session Menu">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+      
+      <!-- Top App Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <h2 class="page-title" id="pageTitle">Dashboard Overview</h2>
+          <p class="page-subtitle" id="pageSubtitle">Track your financial health and cashflow</p>
+        </div>
+
+        <div class="top-bar-right">
+          <!-- Cloud / Local Mode Sync Status Badge -->
+          <button type="button" class="sync-badge local" id="syncStatusBadge" title="Click to view Cloud / Local Sync settings">
+            <span class="sync-dot"></span>
+            <span id="syncBadgeText">Local Sandbox</span>
+          </button>
+
+          <!-- Month Selector -->
+          <div class="month-selector-group">
+            <label for="monthPicker" class="visually-hidden">Select Month</label>
+            <div class="input-icon-wrapper">
+              <i class="fa-regular fa-calendar input-icon"></i>
+              <input type="month" id="monthPicker" class="month-input" title="Filter by Month">
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="currentMonthBtn" title="Jump to current month">
+              Current Month
+            </button>
+          </div>
+
+          <!-- Quick Primary Add Button -->
+          <button type="button" class="btn btn-primary" id="topAddBtn">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Transaction</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- System Notification Banner (Warnings / Demo Notice) -->
+      <div id="systemBanner" class="system-banner hidden">
+        <div class="banner-content">
+          <i class="fa-solid fa-triangle-exclamation banner-icon" id="bannerIcon"></i>
+          <span class="banner-text" id="bannerText"></span>
+        </div>
+        <button type="button" class="banner-close" id="bannerCloseBtn" aria-label="Dismiss banner">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- ==================== VIEW 1: DASHBOARD ==================== -->
+      <section class="view-section active" id="viewDashboard" aria-labelledby="pageTitle">
+        
+        <!-- Summary Cards Grid (4 KPI Cards) -->
+        <div class="kpi-grid">
+          <!-- 1. Total Income -->
+          <div class="kpi-card card-income">
+            <div class="kpi-header">
+              <span class="kpi-label">Total Income</span>
+              <div class="kpi-icon-badge income-badge">
+                <i class="fa-solid fa-arrow-down-left"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiTotalIncome">₹0.00</div>
+            <div class="kpi-footer">
+              <span class="kpi-meta" id="kpiIncomeCount">0 transactions</span>
+              <span class="kpi-trend positive"><i class="fa-solid fa-circle-check"></i> Selected Month</span>
+            </div>
+          </div>
+
+          <!-- 2. Total Expenses -->
+          <div class="kpi-card card-expense">
+            <div class="kpi-header">
+              <span class="kpi-label">Total Expenses</span>
+              <div class="kpi-icon-badge expense-badge">
+                <i class="fa-solid fa-arrow-up-right"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiTotalExpenses">₹0.00</div>
+            <div class="kpi-footer">
+              <span class="kpi-meta" id="kpiExpenseCount">0 transactions</span>
+              <span class="kpi-trend negative"><i class="fa-solid fa-credit-card"></i> Selected Month</span>
+            </div>
+          </div>
+
+          <!-- 3. Current Balance -->
+          <div class="kpi-card card-balance">
+            <div class="kpi-header">
+              <span class="kpi-label">Current Balance</span>
+              <div class="kpi-icon-badge balance-badge">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiCurrentBalance">₹0.00</div>
+            <div class="kpi-footer">
+              <span class="kpi-meta" id="kpiOpeningBalanceNote">Opening: ₹0</span>
+              <span class="kpi-trend neutral"><i class="fa-solid fa-shield-halved"></i> Cumulative</span>
+            </div>
+          </div>
+
+          <!-- 4. Total Net Savings -->
+          <div class="kpi-card card-savings">
+            <div class="kpi-header">
+              <span class="kpi-label">Net Savings</span>
+              <div class="kpi-icon-badge savings-badge">
+                <i class="fa-solid fa-piggy-bank"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiNetSavings">₹0.00</div>
+            <div class="kpi-footer">
+              <span class="kpi-meta" id="kpiSavingsRate">Savings Rate: 0%</span>
+              <span class="kpi-trend" id="kpiSavingsTrend"><i class="fa-solid fa-chart-line"></i> Period</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Budget Progress Card -->
+        <div class="dashboard-budget-card">
+          <div class="budget-card-header">
+            <div>
+              <h3 class="card-title"><i class="fa-solid fa-bullseye header-icon"></i> Monthly Budget Target</h3>
+              <p class="card-subtitle">Keep your spending in check for <span id="budgetMonthLabel">this month</span></p>
+            </div>
+            <div class="budget-actions">
+              <span class="budget-status-pill" id="budgetStatusPill">Within Budget</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="quickEditBudgetBtn">
+                <i class="fa-solid fa-pen-to-square"></i> Set Budget
+              </button>
+            </div>
+          </div>
+
+          <div class="budget-progress-block">
+            <div class="budget-metrics-row">
+              <div>
+                <span class="metric-label">Spent</span>
+                <span class="metric-value font-expense" id="budgetSpentVal">₹0</span>
+              </div>
+              <div class="text-center">
+                <span class="metric-label">Utilization</span>
+                <span class="metric-value" id="budgetPercentVal">0%</span>
+              </div>
+              <div class="text-right">
+                <span class="metric-label">Budget Target</span>
+                <span class="metric-value" id="budgetLimitVal">₹0</span>
+              </div>
+            </div>
+
+            <div class="progress-bar-container large">
+              <div class="progress-bar-fill" id="dashboardProgressBar" style="width: 0%;"></div>
+            </div>
+
+            <div class="budget-footer-row">
+              <span class="budget-remaining-text" id="budgetRemainingText">Remaining: ₹0</span>
+              <span class="budget-advice-text" id="budgetAdviceText">Daily spending limit: ₹0 / day</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section (Grid: 2 Charts) -->
+        <div class="charts-grid">
+          <!-- Chart 1: Income vs Expenses -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3 class="card-title">Income vs. Expenses</h3>
+                <p class="card-subtitle">Comparison for selected month</p>
+              </div>
+              <div class="chart-legend-custom" id="cashflowLegend">
+                <span class="legend-dot income"></span> Income
+                <span class="legend-dot expense"></span> Expense
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="cashflowChart" aria-label="Income versus Expenses Chart" role="img"></canvas>
+              <div class="chart-empty-state hidden" id="cashflowEmpty">
+                <i class="fa-solid fa-chart-column empty-icon"></i>
+                <p>No transactions logged for this month</p>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="SmartSpendApp.openAddModal()">Add Your First Transaction</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart 2: Category Breakdown -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3 class="card-title">Expense Breakdown</h3>
+                <p class="card-subtitle">Distribution by category</p>
+              </div>
+              <span class="badge badge-neutral" id="categoryCountBadge">0 Categories</span>
+            </div>
+            <div class="chart-container doughnut-wrapper">
+              <canvas id="categoryChart" aria-label="Category-wise Expense Doughnut Chart" role="img"></canvas>
+              <div class="chart-empty-state hidden" id="categoryEmpty">
+                <i class="fa-solid fa-chart-pie empty-icon"></i>
+                <p>No expense data available for this month</p>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="SmartSpendApp.openAddModal('expense')">Add Expense</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions Section -->
+        <div class="recent-transactions-card">
+          <div class="card-header-flex">
+            <div>
+              <h3 class="card-title">Recent Transactions</h3>
+              <p class="card-subtitle">Latest activity in selected month</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="viewAllTxBtn">
+              View All Transactions <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- Transaction List Container -->
+          <div class="transaction-list-container">
+            <div class="table-responsive">
+              <table class="data-table" id="recentTransactionsTable">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th class="text-right">Amount</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="recentTransactionsBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Empty State for Recent Transactions -->
+            <div class="empty-state-card hidden" id="recentEmptyState">
+              <div class="empty-state-icon">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <h4 class="empty-state-title">No transactions this month</h4>
+              <p class="empty-state-desc">Start adding your income or expenses to see your financial story unfold.</p>
+              <div class="empty-state-actions">
+                <button type="button" class="btn btn-primary" onclick="SmartSpendApp.openAddModal()">
+                  <i class="fa-solid fa-plus"></i> Add Transaction
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="SmartSpendApp.loadSampleData()">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Load Sample Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== VIEW 2: TRANSACTIONS (FULL CRUD + FILTERS) ==================== -->
+      <section class="view-section" id="viewTransactions" aria-labelledby="txViewHeading">
+        <div class="section-top-card">
+          <div class="card-header-flex">
+            <div>
+              <h3 class="card-title" id="txViewHeading">Transaction History</h3>
+              <p class="card-subtitle">Search, filter, edit, and organize all your financial records</p>
+            </div>
+            <div class="actions-group">
+              <button type="button" class="btn btn-secondary btn-sm" id="exportCsvBtn" title="Export to CSV">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="SmartSpendApp.openAddModal()">
+                <i class="fa-solid fa-plus"></i> Add New
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter & Search Toolbar -->
+          <div class="filters-toolbar">
+            <!-- Search Input -->
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="txSearchInput" class="form-input search-input" placeholder="Search description, note, or amount..." autocomplete="off">
+            </div>
+
+            <!-- Type Filter -->
+            <div class="filter-item">
+              <label for="txTypeFilter" class="visually-hidden">Filter by Type</label>
+              <select id="txTypeFilter" class="form-select">
+                <option value="all">All Types</option>
+                <option value="income">Income Only</option>
+                <option value="expense">Expenses Only</option>
+              </select>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="filter-item">
+              <label for="txCategoryFilter" class="visually-hidden">Filter by Category</label>
+              <select id="txCategoryFilter" class="form-select">
+                <option value="all">All Categories</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="filter-item">
+              <label for="txSortSelect" class="visually-hidden">Sort By</label>
+              <select id="txSortSelect" class="form-select">
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="amount-desc">Amount: High to Low</option>
+                <option value="amount-asc">Amount: Low to High</option>
+              </select>
+            </div>
+
+            <!-- Clear Filters Button -->
+            <button type="button" class="btn btn-ghost btn-sm" id="clearFiltersBtn" title="Reset all search and filters">
+              <i class="fa-solid fa-rotate-left"></i> Clear Filters
+            </button>
+          </div>
+
+          <!-- Filter Results Summary Banner -->
+          <div class="filter-stats-bar" id="filterStatsBar">
+            <span id="filterStatsText">Showing 0 transactions</span>
+            <span class="filter-totals" id="filterTotalsText">Total: ₹0.00</span>
+          </div>
+
+          <!-- Transactions Table -->
+          <div class="table-responsive">
+            <table class="data-table" id="allTransactionsTable">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Date</th>
+                  <th>Notes</th>
+                  <th class="text-right">Amount</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="allTransactionsBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Filter Empty State -->
+          <div class="empty-state-card hidden" id="filterEmptyState">
+            <div class="empty-state-icon">
+              <i class="fa-solid fa-filter-circle-xmark"></i>
+            </div>
+            <h4 class="empty-state-title">No matching transactions found</h4>
+            <p class="empty-state-desc">Try adjusting your search terms, changing the category, or resetting active filters.</p>
+            <button type="button" class="btn btn-secondary" onclick="SmartSpendApp.clearFilters()">
+              <i class="fa-solid fa-rotate-left"></i> Reset All Filters
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 3: ANALYTICS ==================== -->
+      <section class="view-section" id="viewAnalytics" aria-labelledby="analyticsHeading">
+        <div class="analytics-header-card">
+          <h3 class="card-title" id="analyticsHeading">Financial Analytics & Insights</h3>
+          <p class="card-subtitle">In-depth breakdown of spending habits, income sources, and savings capacity</p>
+        </div>
+
+        <!-- Metric Insights 3-Card Grid -->
+        <div class="analytics-insights-grid">
+          <div class="insight-card">
+            <div class="insight-icon"><i class="fa-solid fa-chart-line-up"></i></div>
+            <div class="insight-content">
+              <span class="insight-label">Savings Rate</span>
+              <div class="insight-val" id="analyticsSavingsRate">0%</div>
+              <p class="insight-desc" id="analyticsSavingsHealth">Calculated as Net Savings / Total Income</p>
+            </div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-icon warning"><i class="fa-solid fa-fire"></i></div>
+            <div class="insight-content">
+              <span class="insight-label">Top Expense Category</span>
+              <div class="insight-val" id="analyticsTopCategory">None</div>
+              <p class="insight-desc" id="analyticsTopCategoryAmount">₹0.00 spent</p>
+            </div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-icon neutral"><i class="fa-solid fa-calendar-day"></i></div>
+            <div class="insight-content">
+              <span class="insight-label">Avg. Daily Expense</span>
+              <div class="insight-val" id="analyticsAvgDaily">₹0</div>
+              <p class="insight-desc" id="analyticsAvgDailyDesc">For current active month</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Charts Grid -->
+        <div class="charts-grid">
+          <!-- 6-Month Cashflow Trend Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h4 class="card-title">6-Month Cashflow Trend</h4>
+                <p class="card-subtitle">Income vs Expenses history</p>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="trendChart" aria-label="6-Month Cashflow Trend Chart" role="img"></canvas>
+            </div>
+          </div>
+
+          <!-- Category Spending Table Breakdown -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h4 class="card-title">Category Spending Breakdown</h4>
+                <p class="card-subtitle">Expenses grouped by category</p>
+              </div>
+            </div>
+            <div class="category-breakdown-list" id="categoryBreakdownList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 4: BUDGET & GOALS ==================== -->
+      <section class="view-section" id="viewBudget" aria-labelledby="budgetViewHeading">
+        <div class="budget-view-container">
+          
+          <!-- Budget Settings & Overview Grid -->
+          <div class="budget-setup-grid">
+            
+            <!-- Setup Form Card -->
+            <div class="card budget-settings-card">
+              <h3 class="card-title" id="budgetViewHeading"><i class="fa-solid fa-bullseye header-icon"></i> Monthly Budget Setting</h3>
+              <p class="card-subtitle">Set your spending ceiling for the selected month</p>
+              
+              <form id="budgetSettingForm" class="budget-form">
+                <div class="form-group">
+                  <label for="monthlyBudgetInput" class="form-label">Monthly Spending Budget (₹)</label>
+                  <div class="input-prefix-wrapper">
+                    <span class="input-prefix">₹</span>
+                    <input type="number" id="monthlyBudgetInput" class="form-input" min="0" step="100" placeholder="e.g. 25000" required>
+                  </div>
+                  <span class="form-help">Enter your target expense limit for <span id="budgetMonthFormLabel">this month</span>.</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="openingBalanceInput" class="form-label">Opening Account Balance (₹)</label>
+                  <div class="input-prefix-wrapper">
+                    <span class="input-prefix">₹</span>
+                    <input type="number" id="openingBalanceInput" class="form-input" step="100" placeholder="e.g. 5000" value="0">
+                  </div>
+                  <span class="form-help">Optional opening balance before transactions start.</span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  <i class="fa-solid fa-floppy-disk"></i> Save Budget & Balance
+                </button>
+              </form>
+            </div>
+
+            <!-- Health & Utilization Card -->
+            <div class="card budget-health-card">
+              <h3 class="card-title"><i class="fa-solid fa-heart-pulse header-icon"></i> Budget Health Status</h3>
+              <p class="card-subtitle">Automated spending pace and warnings</p>
+              
+              <div class="budget-indicator-box" id="budgetIndicatorBox">
+                <div class="indicator-icon-large" id="budgetIndicatorIcon">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="indicator-text">
+                  <h4 class="indicator-heading" id="budgetIndicatorHeading">On Track</h4>
+                  <p class="indicator-sub" id="budgetIndicatorSub">You are spending within your allocated monthly budget.</p>
+                </div>
+              </div>
+
+              <div class="budget-stats-list">
+                <div class="budget-stat-item">
+                  <span class="stat-name">Allocated Budget</span>
+                  <span class="stat-val" id="statAllocatedBudget">₹0</span>
+                </div>
+                <div class="budget-stat-item">
+                  <span class="stat-name">Total Spent</span>
+                  <span class="stat-val font-expense" id="statTotalSpent">₹0</span>
+                </div>
+                <div class="budget-stat-item">
+                  <span class="stat-name">Remaining Balance</span>
+                  <span class="stat-val" id="statRemainingBalance">₹0</span>
+                </div>
+                <div class="budget-stat-item">
+                  <span class="stat-name">Budget Used</span>
+                  <span class="stat-val" id="statBudgetUsed">0%</span>
+                </div>
+                <div class="budget-stat-item">
+                  <span class="stat-name">Recommended Daily Limit</span>
+                  <span class="stat-val font-income" id="statDailyLimit">₹0 / day</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Rules & Thresholds Guidance Card -->
+          <div class="card budget-rules-card">
+            <h4 class="card-title"><i class="fa-solid fa-circle-info header-icon"></i> Smart Budget Alerts</h4>
+            <div class="rules-grid">
+              <div class="rule-item">
+                <div class="rule-badge success">Safe (&lt; 80%)</div>
+                <p>Your expenses are safely below 80% of budget. Keep going!</p>
+              </div>
+              <div class="rule-item">
+                <div class="rule-badge warning">Warning (80% - 100%)</div>
+                <p>An amber warning banner triggers as you approach your spending cap.</p>
+              </div>
+              <div class="rule-item">
+                <div class="rule-badge danger">Over-Budget (&gt; 100%)</div>
+                <p>A high-priority red alert notifies you when expenses exceed your limit.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 5: SETTINGS ==================== -->
+      <section class="view-section" id="viewSettings" aria-labelledby="settingsHeading">
+        <div class="settings-container">
+          
+          <!-- Supabase Cloud Sync Card -->
+          <div class="card settings-card" id="supabaseConfigCard">
+            <div class="card-header-flex">
+              <div>
+                <h3 class="card-title"><i class="fa-solid fa-cloud header-icon"></i> Cloud Database & Supabase Sync</h3>
+                <p class="card-subtitle">Connect your live Supabase database or switch between Cloud and Local Sandbox</p>
+              </div>
+              <div class="sync-status-indicator" id="supabaseStatusIndicator">
+                <span class="status-badge-pill local" id="supabaseStatusPill">
+                  <i class="fa-solid fa-circle-dot"></i> Local Sandbox Mode
+                </span>
+              </div>
+            </div>
+
+            <!-- Active Mode Selector -->
+            <div class="form-group">
+              <label class="form-label">Active Storage Engine</label>
+              <div class="segmented-control" role="radiogroup" aria-label="Storage Mode">
+                <label class="segment-option">
+                  <input type="radio" name="storageEngineMode" value="local" id="modeLocalRadio" checked>
+                  <span class="segment-label"><i class="fa-solid fa-hard-drive"></i> Local Sandbox (Offline)</span>
+                </label>
+                <label class="segment-option">
+                  <input type="radio" name="storageEngineMode" value="supabase" id="modeSupabaseRadio">
+                  <span class="segment-label"><i class="fa-solid fa-cloud"></i> Supabase Cloud (Live RLS)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Supabase Credentials Form -->
+            <form id="supabaseConfigForm" class="supabase-form">
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="supabaseUrlInput" class="form-label">Supabase Project URL</label>
+                  <input type="url" id="supabaseUrlInput" class="form-input" placeholder="https://your-project-ref.supabase.co" autocomplete="off">
+                  <span class="form-help">Found in Supabase Project Settings &gt; API &gt; Project URL</span>
+                </div>
+                <div class="form-group col-6">
+                  <label for="supabaseAnonKeyInput" class="form-label">Supabase Public Anon Key</label>
+                  <input type="password" id="supabaseAnonKeyInput" class="form-input font-mono" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
+                  <span class="form-help">Found in Supabase Project Settings &gt; API &gt; anon public key</span>
+                </div>
+              </div>
+
+              <div class="security-callout-box">
+                <i class="fa-solid fa-shield-halved callout-icon"></i>
+                <div class="callout-text">
+                  <strong>Security Guarantee:</strong> Use only your public <code>anon</code> key. <strong>Never</strong> enter your <code>service_role</code> key or database password. Keys are stored only in your browser's local session.
+                </div>
+              </div>
+
+              <div class="btn-group" style="margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" id="testSupabaseBtn">
+                  <i class="fa-solid fa-plug"></i> Test Connection
+                </button>
+                <button type="submit" class="btn btn-primary" id="saveSupabaseBtn">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Save & Enable Cloud Sync
+                </button>
+                <button type="button" class="btn btn-secondary hidden" id="migrateLocalToCloudBtn" title="Upload existing local transactions to your connected Supabase database">
+                  <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Local Data to Cloud
+                </button>
+                <button type="button" class="btn btn-ghost font-danger hidden" id="disconnectSupabaseBtn">
+                  <i class="fa-solid fa-power-off"></i> Disconnect Cloud
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card settings-card">
+            <h3 class="card-title" id="settingsHeading"><i class="fa-solid fa-user-gear header-icon"></i> User Profile & Preferences</h3>
+            <p class="card-subtitle">Manage your local demo profile and currency preferences</p>
+            
+            <form id="profileForm" class="settings-form">
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="profileNameInput" class="form-label">Full Name</label>
+                  <input type="text" id="profileNameInput" class="form-input" value="Demo Student" required>
+                </div>
+                <div class="form-group col-6">
+                  <label for="profileEmailInput" class="form-label">Email Address</label>
+                  <input type="email" id="profileEmailInput" class="form-input" value="student@smartspend.app" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="currencySelect" class="form-label">Currency Symbol</label>
+                  <select id="currencySelect" class="form-select">
+                    <option value="INR" selected>₹ Indian Rupee (INR)</option>
+                    <option value="USD">$ US Dollar (USD)</option>
+                    <option value="EUR">€ Euro (EUR)</option>
+                    <option value="GBP">£ British Pound (GBP)</option>
+                  </select>
+                </div>
+                <div class="form-group col-6">
+                  <label for="themeSelect" class="form-label">Theme Appearance</label>
+                  <select id="themeSelect" class="form-select">
+                    <option value="light" selected>Clean Fintech Light (Recommended)</option>
+                    <option value="dark">Sleek Dark Mode</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-check"></i> Save Preferences
+              </button>
+            </form>
+          </div>
+
+          <!-- Data Management Card -->
+          <div class="card settings-card">
+            <h3 class="card-title"><i class="fa-solid fa-database header-icon"></i> Data Management</h3>
+            <p class="card-subtitle">Manage your stored transactions, backup, or restore sample data</p>
+
+            <div class="data-actions-grid">
+              <div class="data-action-item">
+                <div>
+                  <h4 class="data-action-title">Load Sample Data</h4>
+                  <p class="data-action-desc">Fills the app with realistic student & freelance transactions for college evaluation and demos.</p>
+                </div>
+                <button type="button" class="btn btn-secondary" id="loadSampleDataBtn">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Load Sample Data
+                </button>
+              </div>
+
+              <div class="data-action-item">
+                <div>
+                  <h4 class="data-action-title">Export Transactions (CSV)</h4>
+                  <p class="data-action-desc">Download a complete spreadsheet export of all income and expenses.</p>
+                </div>
+                <button type="button" class="btn btn-secondary" id="exportCsvBtnSettings">
+                  <i class="fa-solid fa-file-csv"></i> Export CSV
+                </button>
+              </div>
+
+              <div class="data-action-item">
+                <div>
+                  <h4 class="data-action-title">Backup & Restore (JSON)</h4>
+                  <p class="data-action-desc">Export your raw data backup or restore an existing backup file.</p>
+                </div>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-secondary" id="exportJsonBtn">
+                    <i class="fa-solid fa-download"></i> Backup JSON
+                  </button>
+                  <label for="importJsonInput" class="btn btn-secondary file-upload-btn">
+                    <i class="fa-solid fa-upload"></i> Restore JSON
+                  </label>
+                  <input type="file" id="importJsonInput" accept=".json" class="visually-hidden">
+                </div>
+              </div>
+
+              <div class="data-action-item danger-zone">
+                <div>
+                  <h4 class="data-action-title font-danger">Clear All Data</h4>
+                  <p class="data-action-desc">Wipe all transactions, reset budget, and return to an empty state.</p>
+                </div>
+                <button type="button" class="btn btn-danger" id="clearAllDataBtn">
+                  <i class="fa-solid fa-trash-can"></i> Reset All Data
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- About Project Card -->
+          <div class="card settings-card">
+            <h3 class="card-title"><i class="fa-solid fa-circle-question header-icon"></i> About SmartSpend</h3>
+            <p class="card-subtitle">College Web Development & Software Engineering Project</p>
+
+            <div class="about-info-grid">
+              <div>
+                <strong>Version:</strong> 1.0.0 (Production Candidate)
+              </div>
+              <div>
+                <strong>Architecture:</strong> Vanilla HTML5, CSS3, ES6+ JavaScript, Chart.js CDN
+              </div>
+              <div>
+                <strong>Storage:</strong> LocalStorage with Modular Service Provider Pattern
+              </div>
+              <div>
+                <strong>Evaluation Target:</strong> College Viva, Resume Portfolio & GitHub
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-bottom-bar" id="mobileBottomBar" aria-label="Mobile Navigation">
+      <button type="button" class="bottom-nav-item active" data-view="dashboard">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Dashboard</span>
+      </button>
+      <button type="button" class="bottom-nav-item" data-view="transactions">
+        <i class="fa-solid fa-receipt"></i>
+        <span>Records</span>
+      </button>
+      <button type="button" class="bottom-nav-item center-add-btn" id="mobileCenterAddBtn" aria-label="Add Transaction">
+        <div class="center-add-icon">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+      </button>
+      <button type="button" class="bottom-nav-item" data-view="analytics">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Analytics</span>
+      </button>
+      <button type="button" class="bottom-nav-item" data-view="budget">
+        <i class="fa-solid fa-bullseye"></i>
+        <span>Budget</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Transaction Add/Edit Modal (Native <dialog> for modern a11y) -->
+  <dialog class="modal-dialog" id="transactionModal" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge" id="modalIconBadge">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" id="modalTitle">Add Transaction</h3>
+            <p class="modal-subtitle" id="modalSubtitle">Record a new income or expense item</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-icon btn-ghost" id="modalCloseBtn" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="transactionForm" class="modal-form" novalidate>
+        <!-- Hidden input for edit mode -->
+        <input type="hidden" id="txIdInput" value="">
+
+        <!-- Type Toggle (Segmented control) -->
+        <div class="form-group">
+          <label class="form-label">Transaction Type <span class="required">*</span></label>
+          <div class="segmented-control" role="radiogroup" aria-label="Transaction Type">
+            <label class="segment-option">
+              <input type="radio" name="txType" value="expense" id="typeExpenseRadio" checked>
+              <span class="segment-label segment-expense"><i class="fa-solid fa-arrow-up-right"></i> Expense</span>
+            </label>
+            <label class="segment-option">
+              <input type="radio" name="txType" value="income" id="typeIncomeRadio">
+              <span class="segment-label segment-income"><i class="fa-solid fa-arrow-down-left"></i> Income</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Amount & Date Row -->
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="txAmountInput" class="form-label">Amount (₹) <span class="required">*</span></label>
+            <div class="input-prefix-wrapper">
+              <span class="input-prefix" id="formCurrencyPrefix">₹</span>
+              <input type="number" id="txAmountInput" class="form-input" min="0.01" step="any" placeholder="0.00" required>
+            </div>
+            <div class="field-error" id="amountError">Please enter a valid amount greater than 0</div>
+          </div>
+
+          <div class="form-group col-6">
+            <label for="txDateInput" class="form-label">Date <span class="required">*</span></label>
+            <input type="date" id="txDateInput" class="form-input" required>
+            <div class="field-error" id="dateError">Please select a valid date</div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="txDescriptionInput" class="form-label">Description / Payee <span class="required">*</span></label>
+          <input type="text" id="txDescriptionInput" class="form-input" placeholder="e.g. Grocery Shopping, Monthly Salary, Campus Canteen" maxlength="100" required>
+          <div class="field-error" id="descriptionError">Please enter a description</div>
+        </div>
+
+        <!-- Category Dropdown -->
+        <div class="form-group">
+          <label for="txCategorySelect" class="form-label">Category <span class="required">*</span></label>
+          <select id="txCategorySelect" class="form-select" required>
+            <!-- Populated dynamically based on Type -->
+          </select>
+          <div class="field-error" id="categoryError">Please select a category</div>
+        </div>
+
+        <!-- Optional Notes -->
+        <div class="form-group">
+          <label for="txNotesInput" class="form-label">Notes (Optional)</label>
+          <textarea id="txNotesInput" class="form-textarea" rows="2" placeholder="Add extra details, invoice numbers, or tags..." maxlength="250"></textarea>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modalSubmitBtn">
+            <i class="fa-solid fa-check"></i> <span id="modalSubmitText">Save Transaction</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- 2. Delete Confirmation Modal -->
+  <dialog class="modal-dialog confirmation-dialog" id="deleteConfirmModal" aria-labelledby="deleteTitle">
+    <div class="modal-content">
+      <div class="confirm-icon-badge">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="confirm-title" id="deleteTitle">Delete Transaction?</h3>
+      <p class="confirm-message">
+        Are you sure you want to delete <strong id="deleteTxDescription">this transaction</strong> of <strong id="deleteTxAmount">₹0.00</strong>? This action cannot be undone.
+      </p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <i class="fa-solid fa-trash-can"></i> Yes, Delete
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 3. Clear All Data Confirmation Modal -->
+  <dialog class="modal-dialog confirmation-dialog" id="clearAllModal" aria-labelledby="clearAllTitle">
+    <div class="modal-content">
+      <div class="confirm-icon-badge danger">
+        <i class="fa-solid fa-skull-crossbones"></i>
+      </div>
+      <h3 class="confirm-title" id="clearAllTitle">Reset All Data?</h3>
+      <p class="confirm-message">
+        This will permanently erase all transactions, reset your custom monthly budgets, and wipe local storage. Are you sure?
+      </p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" id="cancelClearAllBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmClearAllBtn">
+          <i class="fa-solid fa-trash-can"></i> Erase Everything
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 4. Budget Quick-Set Modal -->
+  <dialog class="modal-dialog" id="budgetModal" aria-labelledby="budgetModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge">
+            <i class="fa-solid fa-bullseye"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" id="budgetModalTitle">Set Monthly Budget</h3>
+            <p class="modal-subtitle">Update budget limit for <span id="budgetModalMonthLabel">this month</span></p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-icon btn-ghost" id="budgetModalCloseBtn" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="quickBudgetForm" class="modal-form">
+        <div class="form-group">
+          <label for="quickBudgetInput" class="form-label">Monthly Expense Limit (₹) <span class="required">*</span></label>
+          <div class="input-prefix-wrapper">
+            <span class="input-prefix">₹</span>
+            <input type="number" id="quickBudgetInput" class="form-input" min="0" step="100" placeholder="e.g. 25000" required>
+          </div>
+          <span class="form-help">You'll receive a warning when spending reaches 80% and 100%.</span>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="budgetModalCancelBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-check"></i> Update Budget
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- 5. Login / Account Session Modal -->
+  <dialog class="modal-dialog auth-dialog" id="authModal" aria-labelledby="authTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <h3 class="modal-title" id="authTitle">SmartSpend Account</h3>
+            <p class="modal-subtitle">Session & Local User Profile</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-icon btn-ghost" id="authModalCloseBtn" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Dynamic Mode Security Notice -->
+      <div class="auth-notice" id="authNoticeBox">
+        <i class="fa-solid fa-shield-halved"></i>
+        <div id="authNoticeText">
+          <strong>Storage Engine:</strong> You are currently in <strong>Local Sandbox Mode</strong>. Connect Supabase in Settings to enable real cloud multi-device authentication and database persistence.
+        </div>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" id="tabLogin" role="tab" aria-selected="true">Sign In</button>
+        <button type="button" class="auth-tab" id="tabRegister" role="tab" aria-selected="false">Create Account</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="loginEmail" class="form-label">Email Address</label>
+          <div class="input-icon-wrapper">
+            <i class="fa-regular fa-envelope input-icon"></i>
+            <input type="email" id="loginEmail" class="form-input has-icon" value="student@smartspend.app" placeholder="name@domain.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword" class="form-label">Password</label>
+          <div class="input-icon-wrapper password-wrapper">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="loginPassword" class="form-input has-icon" value="demo1234" placeholder="••••••••" required>
+            <button type="button" class="password-toggle-btn" id="toggleLoginPassword" aria-label="Show password">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-actions">
+          <button type="submit" class="btn btn-primary btn-block" id="loginSubmitBtn">
+            <i class="fa-solid fa-right-to-bracket"></i> <span id="loginSubmitText">Sign In to Account</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-block" id="oneClickDemoBtn">
+            <i class="fa-solid fa-bolt"></i> One-Click Demo Login
+          </button>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label for="regName" class="form-label">Full Name</label>
+          <div class="input-icon-wrapper">
+            <i class="fa-regular fa-user input-icon"></i>
+            <input type="text" id="regName" class="form-input has-icon" placeholder="e.g. Rahul Sharma" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail" class="form-label">Email Address</label>
+          <div class="input-icon-wrapper">
+            <i class="fa-regular fa-envelope input-icon"></i>
+            <input type="email" id="regEmail" class="form-input has-icon" placeholder="name@domain.com" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword" class="form-label">Password</label>
+          <div class="input-icon-wrapper password-wrapper">
+            <i class="fa-solid fa-lock input-icon"></i>
+            <input type="password" id="regPassword" class="form-input has-icon" placeholder="At least 6 characters" minlength="6" required>
+            <button type="button" class="password-toggle-btn" id="toggleRegPassword" aria-label="Show password">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-actions">
+          <button type="submit" class="btn btn-primary btn-block" id="regSubmitBtn">
+            <i class="fa-solid fa-user-plus"></i> <span id="regSubmitText">Create Account</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Active User Info & Logout Button -->
+      <div class="auth-footer" id="authFooterSection">
+        <div class="current-session-info">
+          <span>Logged in as: <strong id="authCurrentUserName">Demo Student</strong></span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <a href="login.html" class="btn btn-secondary btn-sm" title="Open Full Auth Page" style="text-decoration: none;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Auth Page
+          </a>
+          <button type="button" class="btn btn-ghost btn-sm font-danger" id="logoutBtn">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Container for Notifications -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>

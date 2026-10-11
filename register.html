@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — SmartSpend</title>
+  <meta name="description" content="Create a new SmartSpend account to track your finances, set monthly budgets, and analyze spending.">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%22100%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>💳</text></svg>">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-page-body">
+
+  <div class="auth-page-container">
+    <div class="auth-page-card">
+      
+      <!-- Brand Header -->
+      <div class="auth-brand-header">
+        <a href="index.html" style="text-decoration: none;">
+          <div class="auth-brand-logo">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <h1 class="auth-brand-title">SmartSpend</h1>
+        </a>
+        <p class="auth-brand-subtitle">Create your personal finance account</p>
+      </div>
+
+      <!-- Feedback Alert Banner -->
+      <div class="auth-alert" id="authAlert" role="alert">
+        <i class="fa-solid fa-circle-exclamation" id="alertIcon"></i>
+        <span id="alertMessage"></span>
+      </div>
+
+      <!-- Registration Form -->
+      <form id="registerForm" novalidate>
+        
+        <!-- Full Name Input -->
+        <div class="auth-form-group">
+          <label for="regName" class="auth-form-label">Full Name</label>
+          <div class="auth-input-wrapper">
+            <input type="text" id="regName" class="auth-input" placeholder="e.g. Rahul Sharma" required autocomplete="name">
+            <i class="fa-regular fa-user auth-input-icon"></i>
+          </div>
+        </div>
+
+        <!-- Email Input -->
+        <div class="auth-form-group">
+          <label for="regEmail" class="auth-form-label">Email Address</label>
+          <div class="auth-input-wrapper">
+            <input type="email" id="regEmail" class="auth-input" placeholder="name@domain.com" required autocomplete="email">
+            <i class="fa-regular fa-envelope auth-input-icon"></i>
+          </div>
+        </div>
+
+        <!-- Password Input -->
+        <div class="auth-form-group">
+          <label for="regPassword" class="auth-form-label">Password</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="regPassword" class="auth-input" placeholder="Minimum 6 characters" minlength="6" required autocomplete="new-password">
+            <i class="fa-solid fa-lock auth-input-icon"></i>
+            <button type="button" class="auth-toggle-pwd" id="toggleRegPwdBtn" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye" id="toggleRegEyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm Password Input -->
+        <div class="auth-form-group">
+          <label for="regConfirmPassword" class="auth-form-label">Confirm Password</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="regConfirmPassword" class="auth-input" placeholder="Re-enter your password" minlength="6" required autocomplete="new-password">
+            <i class="fa-solid fa-shield-halved auth-input-icon"></i>
+            <button type="button" class="auth-toggle-pwd" id="toggleConfirmPwdBtn" aria-label="Toggle confirm password visibility">
+              <i class="fa-regular fa-eye" id="toggleConfirmEyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="auth-btn-primary" id="registerBtn" style="margin-top: 1.5rem;">
+          <span id="btnText"><i class="fa-solid fa-user-plus"></i> Create Account</span>
+          <span id="btnSpinner" style="display: none;"><i class="fa-solid fa-circle-notch spinner-icon"></i> Registering...</span>
+        </button>
+
+      </form>
+
+      <!-- Footer Prompt -->
+      <div class="auth-footer-prompt">
+        Already have an account? <a href="login.html" class="auth-link">Sign In</a>
+      </div>
+
+      <!-- Collapsible Supabase Project Connection Drawer -->
+      <div class="auth-config-drawer" id="configDrawer">
+        <div class="auth-config-header" id="configToggle">
+          <span><i class="fa-solid fa-database"></i> Supabase Project Settings</span>
+          <i class="fa-solid fa-chevron-down" id="drawerChevron"></i>
+        </div>
+        <div class="auth-config-content collapsed" id="drawerContent">
+          <p style="color: var(--color-text-muted); font-size: 0.78rem; margin: 0;">
+            Verify your Supabase Project URL and Public Anon Key (from Project Settings &rarr; API).
+          </p>
+          <div>
+            <label class="auth-form-label" style="font-size: 0.72rem;">Project URL</label>
+            <input type="url" id="cfgUrlInput" class="auth-input font-mono" style="padding-left: 0.75rem; font-size: 0.8rem;" placeholder="https://xyzcompany.supabase.co">
+          </div>
+          <div>
+            <label class="auth-form-label" style="font-size: 0.72rem;">Public Anon Key</label>
+            <input type="password" id="cfgKeyInput" class="auth-input font-mono" style="padding-left: 0.75rem; font-size: 0.8rem;" placeholder="eyJhbGciOi...">
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="saveConfigBtn" style="align-self: flex-start; padding: 0.4rem 0.85rem;">
+            Save & Connect
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Auth Controller Script -->
+  <script src="auth-helper.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. If user is already authenticated with Supabase, redirect to dashboard
+      const cfg = AuthHelper.getConfig();
+      if (cfg.url && cfg.anonKey) {
+        await AuthHelper.checkAuthAndRedirect({ redirectIfAuth: true });
+      }
+
+      // Populate Project Settings inputs
+      const urlInput = document.getElementById('cfgUrlInput');
+      const keyInput = document.getElementById('cfgKeyInput');
+      if (urlInput) urlInput.value = cfg.url || '';
+      if (keyInput) keyInput.value = cfg.anonKey || '';
+
+      // If no Supabase config exists, expand the config drawer automatically
+      if (!cfg.url || !cfg.anonKey) {
+        const content = document.getElementById('drawerContent');
+        const chevron = document.getElementById('drawerChevron');
+        if (content) content.classList.remove('collapsed');
+        if (chevron) chevron.className = 'fa-solid fa-chevron-up';
+      }
+
+      // Drawer toggle
+      const configToggle = document.getElementById('configToggle');
+      if (configToggle) {
+        configToggle.addEventListener('click', () => {
+          const content = document.getElementById('drawerContent');
+          const chevron = document.getElementById('drawerChevron');
+          const isCollapsed = content.classList.toggle('collapsed');
+          chevron.className = isCollapsed ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
+        });
+      }
+
+      // Save Config Button
+      const saveConfigBtn = document.getElementById('saveConfigBtn');
+      if (saveConfigBtn) {
+        saveConfigBtn.addEventListener('click', () => {
+          const url = (urlInput.value || '').trim();
+          const key = (keyInput.value || '').trim();
+          if (!url || !key) {
+            showAlert('Please provide both Project URL and Anon Key.', 'error');
+            return;
+          }
+          AuthHelper.saveConfig(url, key, true);
+          showAlert('Supabase settings saved successfully!', 'success');
+        });
+      }
+
+      // Password visibility toggles
+      const toggleRegBtn = document.getElementById('toggleRegPwdBtn');
+      const regPwdInput = document.getElementById('regPassword');
+      const toggleRegEye = document.getElementById('toggleRegEyeIcon');
+      if (toggleRegBtn && regPwdInput) {
+        toggleRegBtn.addEventListener('click', () => {
+          const isText = regPwdInput.type === 'text';
+          regPwdInput.type = isText ? 'password' : 'text';
+          toggleRegEye.className = isText ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        });
+      }
+
+      const toggleConfirmBtn = document.getElementById('toggleConfirmPwdBtn');
+      const confirmPwdInput = document.getElementById('regConfirmPassword');
+      const toggleConfirmEye = document.getElementById('toggleConfirmEyeIcon');
+      if (toggleConfirmBtn && confirmPwdInput) {
+        toggleConfirmBtn.addEventListener('click', () => {
+          const isText = confirmPwdInput.type === 'text';
+          confirmPwdInput.type = isText ? 'password' : 'text';
+          toggleConfirmEye.className = isText ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        });
+      }
+
+      // Form submission
+      const form = document.getElementById('registerForm');
+      const submitBtn = document.getElementById('registerBtn');
+      const btnText = document.getElementById('btnText');
+      const btnSpinner = document.getElementById('btnSpinner');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+        if (!name) {
+          showAlert('Please enter your full name.', 'error');
+          return;
+        }
+        if (!email) {
+          showAlert('Please enter a valid email address.', 'error');
+          return;
+        }
+        if (password.length < 6) {
+          showAlert('Password must be at least 6 characters long.', 'error');
+          return;
+        }
+        if (password !== confirmPassword) {
+          showAlert('Passwords do not match. Please re-enter carefully.', 'error');
+          return;
+        }
+
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline-flex';
+
+        try {
+          const res = await AuthHelper.register(name, email, password);
+          if (res.success) {
+            if (res.needsConfirmation) {
+              const alertBox = document.getElementById('authAlert');
+              const alertMsg = document.getElementById('alertMessage');
+              const alertIcon = document.getElementById('alertIcon');
+              alertBox.className = 'auth-alert visible info';
+              alertIcon.className = 'fa-solid fa-circle-check';
+              alertMsg.innerHTML = `
+                <strong>Account created successfully!</strong><br>
+                <span style="font-size: 0.8rem;">Supabase email confirmation is currently active for this project.</span>
+                <div style="margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.78rem;">
+                  <span>⚡ Quick Fix: In Supabase Dashboard, go to <strong>Authentication &rarr; Users &rarr; click ... &rarr; Auto Confirm User</strong></span>
+                  <a href="login.html" class="auth-link" style="font-weight: 700; text-decoration: underline;">
+                    &rarr; Go to Sign In
+                  </a>
+                </div>
+              `;
+              form.reset();
+              submitBtn.disabled = false;
+              btnText.style.display = 'inline-flex';
+              btnSpinner.style.display = 'none';
+            } else {
+              showAlert('Account created successfully! Redirecting to dashboard...', 'success');
+              setTimeout(() => {
+                window.location.replace('index.html');
+              }, 800);
+            }
+          } else {
+            showAlert(res.message || 'Failed to create account.', 'error');
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline-flex';
+            btnSpinner.style.display = 'none';
+          }
+        } catch (err) {
+          showAlert(err.message || 'An unexpected registration error occurred.', 'error');
+          submitBtn.disabled = false;
+          btnText.style.display = 'inline-flex';
+          btnSpinner.style.display = 'none';
+        }
+      });
+
+      function showAlert(msg, type = 'error') {
+        const alertBox = document.getElementById('authAlert');
+        const alertMsg = document.getElementById('alertMessage');
+        const alertIcon = document.getElementById('alertIcon');
+        alertBox.className = `auth-alert visible ${type}`;
+        alertMsg.textContent = msg;
+        if (type === 'success') {
+          alertIcon.className = 'fa-solid fa-circle-check';
+        } else if (type === 'info') {
+          alertIcon.className = 'fa-solid fa-circle-info';
+        } else {
+          alertIcon.className = 'fa-solid fa-circle-exclamation';
+        }
+      }
+
+      function hideAlert() {
+        const alertBox = document.getElementById('authAlert');
+        alertBox.className = 'auth-alert';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — SmartSpend</title>
+  <meta name="description" content="Sign in to your SmartSpend personal finance dashboard to track expenses and manage budgets.">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%22100%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>💳</text></svg>">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-page-body">
+
+  <div class="auth-page-container">
+    <div class="auth-page-card">
+      
+      <!-- Brand Header -->
+      <div class="auth-brand-header">
+        <a href="index.html" style="text-decoration: none;">
+          <div class="auth-brand-logo">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <h1 class="auth-brand-title">SmartSpend</h1>
+        </a>
+        <p class="auth-brand-subtitle">Sign in to your personal finance dashboard</p>
+      </div>
+
+      <!-- Feedback Alert Banner -->
+      <div class="auth-alert" id="authAlert" role="alert">
+        <i class="fa-solid fa-circle-exclamation" id="alertIcon"></i>
+        <span id="alertMessage"></span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" novalidate>
+        
+        <!-- Email Input -->
+        <div class="auth-form-group">
+          <label for="loginEmail" class="auth-form-label">Email Address</label>
+          <div class="auth-input-wrapper">
+            <input type="email" id="loginEmail" class="auth-input" placeholder="name@domain.com" required autocomplete="email">
+            <i class="fa-regular fa-envelope auth-input-icon"></i>
+          </div>
+        </div>
+
+        <!-- Password Input -->
+        <div class="auth-form-group">
+          <label for="loginPassword" class="auth-form-label">Password</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" required autocomplete="current-password">
+            <i class="fa-solid fa-lock auth-input-icon"></i>
+            <button type="button" class="auth-toggle-pwd" id="togglePasswordBtn" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye" id="toggleEyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Options Row: Remember Me & Forgot Password -->
+        <div class="auth-options-row">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="rememberMe" checked style="accent-color: var(--color-primary);">
+            <span>Remember me</span>
+          </label>
+          <a href="reset-password.html" class="auth-link">Forgot password?</a>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="auth-btn-primary" id="loginBtn">
+          <span id="btnText"><i class="fa-solid fa-right-to-bracket"></i> Sign In</span>
+          <span id="btnSpinner" style="display: none;"><i class="fa-solid fa-circle-notch spinner-icon"></i> Signing in...</span>
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="auth-divider">
+        <span>or</span>
+      </div>
+
+      <!-- One-Click Demo Sandbox Option -->
+      <button type="button" class="auth-btn-secondary" id="demoLoginBtn">
+        <i class="fa-solid fa-bolt" style="color: #eab308;"></i> Continue in Local Demo Mode
+      </button>
+
+      <!-- Footer Prompt -->
+      <div class="auth-footer-prompt">
+        Don't have an account? <a href="register.html" class="auth-link">Create Account</a>
+      </div>
+
+      <!-- Collapsible Supabase Project Connection Drawer -->
+      <div class="auth-config-drawer" id="configDrawer">
+        <div class="auth-config-header" id="configToggle">
+          <span><i class="fa-solid fa-database"></i> Supabase Project Settings</span>
+          <i class="fa-solid fa-chevron-down" id="drawerChevron"></i>
+        </div>
+        <div class="auth-config-content collapsed" id="drawerContent">
+          <p style="color: var(--color-text-muted); font-size: 0.78rem; margin: 0;">
+            Enter your Supabase Project URL and Public Anon Key (from Project Settings &rarr; API).
+          </p>
+          <div>
+            <label class="auth-form-label" style="font-size: 0.72rem;">Project URL</label>
+            <input type="url" id="cfgUrlInput" class="auth-input font-mono" style="padding-left: 0.75rem; font-size: 0.8rem;" placeholder="https://xyzcompany.supabase.co">
+          </div>
+          <div>
+            <label class="auth-form-label" style="font-size: 0.72rem;">Public Anon Key</label>
+            <input type="password" id="cfgKeyInput" class="auth-input font-mono" style="padding-left: 0.75rem; font-size: 0.8rem;" placeholder="eyJhbGciOi...">
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="saveConfigBtn" style="align-self: flex-start; padding: 0.4rem 0.85rem;">
+            Save & Connect
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Auth Controller Script -->
+  <script src="auth-helper.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Check for email confirmation callback (PKCE code or access token in URL)
+      const callbackResult = await AuthHelper.handleAuthCallback();
+      if (callbackResult && callbackResult.handled) {
+        if (callbackResult.success) {
+          showAlert(callbackResult.message || 'Email confirmed successfully! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.replace('index.html');
+          }, 800);
+          return;
+        } else {
+          showAlert(callbackResult.message || 'Could not verify confirmation link.', 'error');
+        }
+      }
+
+      // 2. If user is already authenticated with Supabase, redirect to dashboard
+      const cfg = AuthHelper.getConfig();
+      if (cfg.url && cfg.anonKey) {
+        await AuthHelper.checkAuthAndRedirect({ redirectIfAuth: true });
+      }
+
+      // Populate Project Settings inputs
+      const urlInput = document.getElementById('cfgUrlInput');
+      const keyInput = document.getElementById('cfgKeyInput');
+      if (urlInput) urlInput.value = cfg.url || '';
+      if (keyInput) keyInput.value = cfg.anonKey || '';
+
+      // If no Supabase config exists, expand the config drawer automatically
+      if (!cfg.url || !cfg.anonKey) {
+        const content = document.getElementById('drawerContent');
+        const chevron = document.getElementById('drawerChevron');
+        if (content) content.classList.remove('collapsed');
+        if (chevron) chevron.className = 'fa-solid fa-chevron-up';
+      }
+
+      // Drawer toggle
+      const configToggle = document.getElementById('configToggle');
+      if (configToggle) {
+        configToggle.addEventListener('click', () => {
+          const content = document.getElementById('drawerContent');
+          const chevron = document.getElementById('drawerChevron');
+          const isCollapsed = content.classList.toggle('collapsed');
+          chevron.className = isCollapsed ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up';
+        });
+      }
+
+      // Save Config Button
+      const saveConfigBtn = document.getElementById('saveConfigBtn');
+      if (saveConfigBtn) {
+        saveConfigBtn.addEventListener('click', () => {
+          const url = (urlInput.value || '').trim();
+          const key = (keyInput.value || '').trim();
+          if (!url || !key) {
+            showAlert('Please provide both Project URL and Anon Key.', 'error');
+            return;
+          }
+          AuthHelper.saveConfig(url, key, true);
+          showAlert('Supabase settings saved successfully!', 'success');
+        });
+      }
+
+      // Password visibility toggle
+      const toggleBtn = document.getElementById('togglePasswordBtn');
+      const pwdInput = document.getElementById('loginPassword');
+      const eyeIcon = document.getElementById('toggleEyeIcon');
+      if (toggleBtn && pwdInput) {
+        toggleBtn.addEventListener('click', () => {
+          const isText = pwdInput.type === 'text';
+          pwdInput.type = isText ? 'password' : 'text';
+          eyeIcon.className = isText ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        });
+      }
+
+      // Demo login
+      const demoBtn = document.getElementById('demoLoginBtn');
+      if (demoBtn) {
+        demoBtn.addEventListener('click', () => {
+          const demoUser = {
+            id: 'demo_user',
+            name: 'Demo Student',
+            email: 'student@smartspend.app',
+            isDemo: true,
+            isCloud: false
+          };
+          localStorage.setItem('smartspend_session_user', JSON.stringify(demoUser));
+          window.location.replace('index.html');
+        });
+      }
+
+      // Form Submission
+      const form = document.getElementById('loginForm');
+      const submitBtn = document.getElementById('loginBtn');
+      const btnText = document.getElementById('btnText');
+      const btnSpinner = document.getElementById('btnSpinner');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!email) {
+          showAlert('Please enter your email address.', 'error');
+          return;
+        }
+        if (!password) {
+          showAlert('Please enter your password.', 'error');
+          return;
+        }
+
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline-flex';
+
+        try {
+          const res = await AuthHelper.login(email, password);
+          if (res.success) {
+            showAlert('Login successful! Redirecting to dashboard...', 'success');
+            setTimeout(() => {
+              window.location.replace('index.html');
+            }, 600);
+          } else {
+            const isUnconfirmed = (res.message || '').toLowerCase().includes('email not confirmed');
+            if (isUnconfirmed) {
+              showUnconfirmedEmailAlert(email);
+            } else {
+              showAlert(res.message || 'Invalid credentials or user not found.', 'error');
+            }
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline-flex';
+            btnSpinner.style.display = 'none';
+          }
+        } catch (err) {
+          showAlert(err.message || 'An unexpected error occurred.', 'error');
+          submitBtn.disabled = false;
+          btnText.style.display = 'inline-flex';
+          btnSpinner.style.display = 'none';
+        }
+      });
+
+      function showAlert(msg, type = 'error') {
+        const alertBox = document.getElementById('authAlert');
+        const alertMsg = document.getElementById('alertMessage');
+        const alertIcon = document.getElementById('alertIcon');
+        alertBox.className = `auth-alert visible ${type}`;
+        alertMsg.textContent = msg;
+        if (type === 'success') {
+          alertIcon.className = 'fa-solid fa-circle-check';
+        } else if (type === 'info') {
+          alertIcon.className = 'fa-solid fa-circle-info';
+        } else {
+          alertIcon.className = 'fa-solid fa-circle-exclamation';
+        }
+      }
+
+      function showUnconfirmedEmailAlert(email) {
+        const alertBox = document.getElementById('authAlert');
+        const alertMsg = document.getElementById('alertMessage');
+        const alertIcon = document.getElementById('alertIcon');
+        alertBox.className = 'auth-alert visible error';
+        alertIcon.className = 'fa-solid fa-triangle-exclamation';
+        alertMsg.innerHTML = `
+          <strong>Email not confirmed yet.</strong><br>
+          <span style="font-size: 0.8rem; opacity: 0.9;">Supabase hasn't verified this email. You can:</span>
+          <div style="margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.78rem;">
+            <a href="javascript:void(0)" id="resendBtn" style="color: inherit; font-weight: 700; text-decoration: underline;">
+              📩 Resend confirmation email
+            </a>
+            <span>⚡ Or in Supabase Dashboard: <em>Authentication &rarr; Users &rarr; click ... &rarr; Auto Confirm User</em></span>
+          </div>
+        `;
+
+        const resendBtn = document.getElementById('resendBtn');
+        if (resendBtn) {
+          resendBtn.addEventListener('click', async () => {
+            resendBtn.textContent = 'Sending email...';
+            const res = await AuthHelper.resendConfirmation(email);
+            if (res.success) {
+              showAlert(res.message, 'success');
+            } else {
+              showAlert(res.message, 'error');
+            }
+          });
+        }
+      }
+
+      function hideAlert() {
+        const alertBox = document.getElementById('authAlert');
+        alertBox.className = 'auth-alert';
+      }
+    });
+  </script>
+</body>
+</html>
